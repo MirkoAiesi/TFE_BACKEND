@@ -22,7 +22,7 @@ export const registerUserValidator = vine.compile(
 )
 export const changePasswordValidator = vine.compile(
   vine.object({
-    password: vine.string().trim().escape().minLength(8).maxLength(20),
+    currentPassword: vine.string().trim().escape().minLength(8).maxLength(20),
     newPassword: vine.string().trim().escape().minLength(8).maxLength(20),
     confirmPassword: vine.string().trim().escape().minLength(8).maxLength(20).sameAs('newPassword'),
   })

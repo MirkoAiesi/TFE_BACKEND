@@ -18,6 +18,14 @@ export default class extends BaseSchema {
       table.string('desc')
       table.string('options')
       table.integer('status').defaultTo(0).notNullable()
+      table.string('phone').notNullable
+      table.string('cooking_type').notNullable()
+      table.string('price').notNullable()
+      table.integer('cultery').notNullable()
+      table.jsonb('schedule').notNullable()
+      table.string('cut_time')
+      table.string('vacancy')
+      table.float('rating').defaultTo(0);
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })

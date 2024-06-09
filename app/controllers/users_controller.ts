@@ -29,8 +29,10 @@ export default class UsersController {
   async modifyPassword({ auth, response, request }: HttpContext) {
     try {
       const user = await auth.use('api').authenticate()
-      const newData = request.only(['password', 'newPassword', 'confirmPassword'])
-      const goodPassword = await hash.verify(user.password, newData.password)
+      const newData = request.all()
+      console.log(newData)
+      const goodPassword = await hash.verify(user.password, newData.currentPassword)
+      console.log(goodPassword)
       if (goodPassword) {
         const payload = await changePasswordValidator.validate(newData)
         await User.query()

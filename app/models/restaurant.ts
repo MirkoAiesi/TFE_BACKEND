@@ -1,5 +1,7 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
+import Booking from './booking.js'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
 
 export default class Restaurant extends BaseModel {
   @column({ isPrimary: true })
@@ -23,9 +25,36 @@ export default class Restaurant extends BaseModel {
   @column()
   declare status: number
 
+  @column()
+  declare phone: string
+
+  @column()
+  declare cooking_type: string
+
+  @column()
+  declare price: string
+
+  @column()
+  declare cultery: number
+
+  @column()
+  declare schedule: object
+
+  @column()
+  declare cut_time: string
+
+  @column()
+  declare vacancy: string
+
+  @column()
+  declare rating: number
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+
+  @hasMany(() => Booking)
+  public bookings!: HasMany<typeof Booking>
 }

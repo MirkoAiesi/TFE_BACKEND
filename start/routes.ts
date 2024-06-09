@@ -2,6 +2,7 @@ import router from '@adonisjs/core/services/router'
 import AutoSwagger from 'adonis-autoswagger'
 import swagger from '#config/swagger'
 import { middleware } from '#start/kernel'
+import PaymentController from '#controllers/payments_controller'
 const AuthController = () => import('#controllers/auth_controller')
 const UsersController = () => import('#controllers/users_controller')
 const RestaurantsController = () => import('#controllers/restaurants_controller')
@@ -35,21 +36,28 @@ router
       .group(() => {
         router.get('/all', [RestaurantsController, 'getAllRestaurants'])
         router.get('/:id', [RestaurantsController, 'getRestaurant'])
+        router.post('/search', [RestaurantsController, 'search'])
         router.post('/add', [RestaurantsController, 'addRestaurant']).use(middleware.auth())
         router.patch('/modify', [RestaurantsController, 'modifyRestaurant']).use(middleware.auth())
         router.delete('/delete', [RestaurantsController, 'deleteRestaurant']).use(middleware.auth())
+        router.patch('/update-status', [RestaurantsController, 'updateRestaurantStatus']).use(middleware.auth())
       })
       .prefix('/restaurants')
     router
       .group(() => {
         router.post('/create', [BookingsController, 'addBooking']).use(middleware.auth())
         router.get('/', [BookingsController, 'getMyBooking']).use(middleware.auth())
+        router.get('/:restaurantId', [BookingsController, 'getBookingsByRestaurant']).use(middleware.auth())
+        router.get('/user/:userId', [BookingsController, 'getBookingsByUser']).use(middleware.auth())
+        router.patch('/update-status', [BookingsController, 'updateBookingStatus']).use(middleware.auth())
+        router.patch('/user/update-status', [BookingsController, 'updateBookingStatusByUser']).use(middleware.auth())
       })
       .prefix('/bookings')
     router
       .group(() => {
-        router.post('/create', [ReviewsController, 'addReview']).use(middleware.auth())
+        router.post('/create/:id', [ReviewsController, 'addReview']).use(middleware.auth())
         router.get('/', [ReviewsController, 'getReview']).use(middleware.auth())
+        router.get('/:id', [ReviewsController, 'getRestaurantReview'])
       })
       .prefix('/reviews')
     router
@@ -61,6 +69,19 @@ router
           .use(middleware.auth())
       })
       .prefix('/restorer')
+    router.group(() => {
+      router.post('/restaurant', [AuthController, 'checkRestaurant']).use(middleware.auth())
+    }).prefix('/check')
+
+
+    router.get('/photos/:id', [RestaurantsController, 'getPhotos'])
+    router.post('/upload/photos/:id', [RestaurantsController, 'uploadPhotos'])
+    router.delete('/photos/:id/:fileName', [RestaurantsController, 'deletePhoto'])
+
+    router.post('/payment/create-checkout-session', [PaymentController, 'createCheckoutSession']).use(middleware.auth())
+
+
+
     router
       .group(() => {
         router.get('/users', [AdminController, 'getUsers']).use(middleware.checkAdmin())
