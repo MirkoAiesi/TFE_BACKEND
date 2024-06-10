@@ -15,7 +15,6 @@ export default class extends BaseSchema {
         .inTable('users')
         .onDelete('CASCADE')
       table.string('address', 255).notNullable()
-      table.string('desc')
       table.string('options')
       table.integer('status').defaultTo(0).notNullable()
       table.string('phone').notNullable
@@ -28,6 +27,9 @@ export default class extends BaseSchema {
       table.float('rating').defaultTo(0);
       table.timestamp('created_at')
       table.timestamp('updated_at')
+      table.string('facebook')
+      table.string('instagram')
+      table.string('web')
     })
   }
 

@@ -17,9 +17,6 @@ export default class Restaurant extends BaseModel {
   declare address: string
 
   @column()
-  declare desc: string
-
-  @column()
   declare options: string
 
   @column()
@@ -48,6 +45,15 @@ export default class Restaurant extends BaseModel {
 
   @column()
   declare rating: number
+
+  @column()
+  declare facebook: string
+
+  @column()
+  declare instagram: string
+
+  @column()
+  declare web: string
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

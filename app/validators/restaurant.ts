@@ -4,13 +4,12 @@ export const addRestaurantValidator = vine.compile(
   vine.object({
     name: vine.string().trim().escape().optional(),
     address: vine.string().trim().escape().optional(),
-    desc: vine.string().trim().escape().optional(),
     options: vine.string().trim().escape().optional(),
-    status: vine.number(),
+    status: vine.number().optional(),
     phone: vine.string().trim().escape().optional(),
     cooking_type: vine.string().trim().escape().optional(),
     price: vine.string().trim().escape().optional(),
-    cultery: vine.number(),
+    cultery: vine.number().optional(),
     schedule: vine.object({
       lundi: vine.array(vine.string()).optional(),
       mardi: vine.array(vine.string()).optional(),
@@ -22,7 +21,10 @@ export const addRestaurantValidator = vine.compile(
     }).optional(),
     cutTime: vine.string().trim().escape().optional(),
     vacancy: vine.string().trim().escape().optional(),
-    rating: vine.number(),
+    rating: vine.number().optional(),
+    facebook: vine.string().trim().escape().optional(),
+    instagram: vine.string().trim().escape().optional(),
+    web: vine.string().trim().escape().optional()
 
 
   })

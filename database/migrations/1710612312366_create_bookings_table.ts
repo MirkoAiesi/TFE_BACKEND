@@ -18,6 +18,7 @@ export default class extends BaseSchema {
       table.integer('status').defaultTo(0).notNullable()
       table.text('comment')
       table.timestamp('created_at')
+      table.integer('fidelity')
     })
   }
 

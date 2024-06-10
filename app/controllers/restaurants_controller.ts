@@ -17,10 +17,9 @@ export default class RestaurantsController {
     const { name, type, price, dogs, terrace, card } = request.only(['name', 'type', 'price', 'dogs', 'terrace', 'card'])
 
     let query = Restaurant.query()
-
     // Filtrer d'abord par nom
     if (name) {
-      query = query.where('name', 'LIKE', `%${name}%`)
+      query = query.whereRaw('LOWER(name) LIKE ?', [`%${name.toLowerCase()}%`])
     }
 
     const restaurants = await query.exec()
@@ -31,13 +30,12 @@ export default class RestaurantsController {
     if (type) {
       filteredRestaurants = filteredRestaurants.filter(restaurant => restaurant.cooking_type === type)
     }
-
     if (price) {
-      if (price === '€ (-50€)') {
+      if (price === '€') {
         filteredRestaurants = filteredRestaurants.filter(restaurant => restaurant.price === "€ (-50€)")
-      } else if (price === '€€ (50€ - 80€)') {
+      } else if (price === '€€') {
         filteredRestaurants = filteredRestaurants.filter(restaurant => restaurant.price === "€€ (50€ - 80€)")
-      } else if (price === '€€€ (+80€)') {
+      } else if (price === '€€€') {
         filteredRestaurants = filteredRestaurants.filter(restaurant => restaurant.price === '€€€ (+80€)')
       }
     }
@@ -47,11 +45,10 @@ export default class RestaurantsController {
         return params[0] === 'oui'
       })
     }
-
     if (terrace) {
       filteredRestaurants = filteredRestaurants.filter(restaurant => {
         const params = restaurant.options.split(',')
-        return params[1] === 'oui'
+        return params[1].trim().toLowerCase() === 'oui'
       })
     }
 
@@ -62,15 +59,50 @@ export default class RestaurantsController {
       })
     }
 
-    return response.json(filteredRestaurants)
+    const enhancedRestaurants = await Promise.all(filteredRestaurants.map(async (restaurant) => {
+      const restaurantDir = path.join('public', String(restaurant.id));
+
+      let firstImage = null;
+      if (fs.existsSync(restaurantDir)) {
+        const files = fs.readdirSync(restaurantDir).filter(file => /\.(jpg|jpeg|png|gif|webp)$/.test(file));
+        if (files.length > 0) {
+          firstImage = files[0];
+        }
+      }
+
+      return {
+        ...restaurant.toJSON(),
+        firstImage,
+      };
+    }));
+
+    return response.json(enhancedRestaurants);
   }
   async getRestaurant({ params, response }: HttpContext) {
     try {
-      const restaurantId = params.id
-      const data = await Restaurant.findBy('id', restaurantId)
-      response.status(200).json(data)
+      const restaurantId = params.id;
+      const restaurant = await Restaurant.findBy('id', restaurantId);
+
+      if (!restaurant) {
+        return response.status(404).json({ message: 'Restaurant not found' });
+      }
+
+      const restaurantDir = path.join('public', String(restaurantId));
+
+      let files = [];
+      if (fs.existsSync(restaurantDir)) {
+        files = fs.readdirSync(restaurantDir).filter(file => /\.(jpg|jpeg|png|gif)$/.test(file));
+      }
+
+      const data = {
+        restaurant,
+        files,
+      };
+
+      response.status(200).json(data);
     } catch (error) {
-      response.status(500).json(error)
+      console.log(error)
+      response.status(500).json(error);
     }
   }
   async addRestaurant({ auth, request, response }: HttpContext) {
@@ -78,7 +110,7 @@ export default class RestaurantsController {
       const user = await auth.use('api').authenticate()
       console.log(user)
       const restaurant = await addRestaurantValidator.validate(
-        request.only(['name', 'address', 'desc', 'options', 'status', 'phone', 'cooking_type', 'price', 'cultery', 'schedule', 'cut_time', 'vacancy', 'rating'])
+        request.only(['name', 'address', 'options', 'status', 'phone', 'cooking_type', 'price', 'cultery', 'schedule', 'cut_time', 'vacancy', 'rating'])
       )
       console.log(restaurant)
       await Restaurant.create({
@@ -94,16 +126,25 @@ export default class RestaurantsController {
   async modifyRestaurant({ auth, request, response }: HttpContext) {
     try {
       const user = await auth.use('api').authenticate()
+      console.log(request.all())
       const restaurant = await addRestaurantValidator.validate(
-        request.only(['name', 'address', 'desc'])
+        request.only(['name', 'address', 'options', 'phone', 'cooking_type', 'price', 'cultery', 'schedule', 'cut_time', 'vacancy'])
       )
       await Restaurant.query().where('owner_id', user.id).update({
         name: restaurant.name,
         address: restaurant.address,
-        desc: restaurant.desc,
+        options: restaurant.options,
+        phone: restaurant.phone,
+        cooking_type: restaurant.cooking_type,
+        price: restaurant.price,
+        cultery: restaurant.cultery,
+        schedule: restaurant.schedule,
+        cut_time: restaurant.cutTime,
+        vacancy: restaurant.vacancy,
       })
       response.status(200).json('Restaurant successfully modified.')
     } catch (error) {
+      console.log(error)
       response.status(500).json(error)
     }
   }
@@ -192,6 +233,52 @@ export default class RestaurantsController {
     } catch (error) {
       console.error(error)
       return response.status(500).json(error)
+    }
+  }
+  async updateRestaurantRating({ params, request, response }: HttpContext) {
+    try {
+      const restaurantId = params.id;
+      const { rating } = request.only(['rating']);
+
+      if (rating === undefined || isNaN(rating)) {
+        return response.status(400).json({ error: 'Invalid rating value' });
+      }
+
+      const restaurant = await Restaurant.find(restaurantId);
+
+      if (!restaurant) {
+        return response.status(404).json({ message: 'Restaurant not found' });
+      }
+
+      restaurant.rating = rating;
+      await restaurant.save();
+
+      return response.status(200).json({ message: 'Restaurant rating successfully updated.', restaurant });
+    } catch (error) {
+      console.error(error);
+      return response.status(500).json({ error: 'An error occurred while updating the rating' });
+    }
+  }
+  async addSocialLinks({ params, request, response }: HttpContext) {
+    try {
+      const restaurantId = params.id;
+      const { facebook, instagram, web } = request.only(['facebook', 'instagram', 'web']);
+
+      const restaurant = await Restaurant.find(restaurantId);
+
+      if (!restaurant) {
+        return response.status(404).json({ message: 'Restaurant not found' });
+      }
+
+      restaurant.facebook = facebook;
+      restaurant.instagram = instagram;
+      restaurant.web = web;
+      await restaurant.save();
+
+      return response.status(200).json({ message: 'Social links successfully added.', restaurant });
+    } catch (error) {
+      console.error(error);
+      return response.status(500).json({ error: 'An error occurred while adding the social links' });
     }
   }
 }

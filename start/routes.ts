@@ -41,6 +41,8 @@ router
         router.patch('/modify', [RestaurantsController, 'modifyRestaurant']).use(middleware.auth())
         router.delete('/delete', [RestaurantsController, 'deleteRestaurant']).use(middleware.auth())
         router.patch('/update-status', [RestaurantsController, 'updateRestaurantStatus']).use(middleware.auth())
+        router.patch('/:id/rating', [RestaurantsController, 'updateRestaurantRating'])
+        router.patch('/:id/social-links', [RestaurantsController, 'addSocialLinks']).use(middleware.auth())
       })
       .prefix('/restaurants')
     router
@@ -51,6 +53,7 @@ router
         router.get('/user/:userId', [BookingsController, 'getBookingsByUser']).use(middleware.auth())
         router.patch('/update-status', [BookingsController, 'updateBookingStatus']).use(middleware.auth())
         router.patch('/user/update-status', [BookingsController, 'updateBookingStatusByUser']).use(middleware.auth())
+        router.get('/pendings/status', [BookingsController, 'getPendingBookings']).use(middleware.auth())
       })
       .prefix('/bookings')
     router
@@ -58,6 +61,8 @@ router
         router.post('/create/:id', [ReviewsController, 'addReview']).use(middleware.auth())
         router.get('/', [ReviewsController, 'getReview']).use(middleware.auth())
         router.get('/:id', [ReviewsController, 'getRestaurantReview'])
+        router.get('/user/:userId', [ReviewsController, 'getUserReviews'])
+        router.delete('/:id', [ReviewsController, 'deleteReview']).use(middleware.auth())
       })
       .prefix('/reviews')
     router
@@ -71,6 +76,7 @@ router
       .prefix('/restorer')
     router.group(() => {
       router.post('/restaurant', [AuthController, 'checkRestaurant']).use(middleware.auth())
+      router.post('/user', [AuthController, 'checkUser']).use(middleware.auth())
     }).prefix('/check')
 
 

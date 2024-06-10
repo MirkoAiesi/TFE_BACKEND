@@ -42,6 +42,19 @@ export default class AuthController {
       }
     }
   }
+  async checkUser({ auth, response }: HttpContext) {
+    try {
+      await auth.use('api').authenticate();
+      const user = auth.use('api').user;
+      if (user) {
+        return response.json({ userId: user.id });
+      } else {
+        return response.unauthorized({ message: 'User not authenticated' });
+      }
+    } catch (error) {
+      return response.unauthorized({ message: 'User not authenticated' });
+    }
+  }
 }
 
 

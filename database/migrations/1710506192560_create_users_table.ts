@@ -12,6 +12,7 @@ export default class extends BaseSchema {
       table.integer('roles').notNullable().defaultTo(0)
       table.string('password').notNullable()
       table.date('birthday').notNullable()
+      table.integer('fidelity').notNullable().defaultTo(0)
 
       table.timestamp('created_at').notNullable()
       table.timestamp('updated_at').nullable()

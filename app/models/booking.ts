@@ -26,6 +26,9 @@ export default class Booking extends BaseModel {
   @column()
   declare comment: string
 
+  @column()
+  declare fidelity: number
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

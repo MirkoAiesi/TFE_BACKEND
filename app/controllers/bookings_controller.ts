@@ -1,23 +1,71 @@
 import { HttpContext } from '@adonisjs/core/http'
 import Booking from '#models/booking'
 import Restaurant from '#models/restaurant'
+import User from '#models/user'
 
 export default class BookingsController {
   async addBooking({ auth, request, response }: HttpContext) {
     try {
       const user = await auth.use('api').authenticate()
-      const data = request.only(['restaurant_id', 'date_time', 'number_people', 'comment'])
+      const data = request.only(['restaurant_id', 'date_time', 'number_people', 'comment', 'fidelity'])
+      let reduction = null
+      if (user.fidelity >= data.fidelity && data.fidelity !== null) {
+        switch (data.fidelity) {
+          case 100:
+            reduction = 5
+            break;
+          case 200:
+            reduction = 10
+            break;
+          case 500:
+            reduction = 20
+            break;
+          default:
+            reduction = null
+        }
+        user.fidelity = user.fidelity - data.fidelity
+        user.save()
+      } else {
+        return response.status(500).json("Pas assez de points de fidélité")
+      }
       await Booking.create({
         user_id: user.id,
         restaurant_id: data.restaurant_id,
         date_time: data.date_time,
         number_people: data.number_people,
         comment: data.comment,
+        status: 0,
+        fidelity: reduction ? reduction : null
       })
 
       return response.status(201).json('Booking successfully created.')
     } catch (error) {
+      console.log(error)
       response.status(500).json(error)
+    }
+  }
+  async getPendingBookings({ auth, response }: HttpContext) {
+    try {
+
+      const user = await auth.use('api').authenticate()
+
+      await user.load('restaurant')
+      const restaurant = user.restaurant
+      if (!restaurant) {
+        return response.status(404).json({ message: 'Restaurant not found' })
+      }
+
+      const restaurantId = restaurant.id
+      if (typeof restaurantId !== 'number') {
+        return response.status(400).json({ message: 'Invalid restaurant ID' })
+      }
+
+      const bookings = await Booking.query().where('restaurant_id', restaurantId).andWhere('status', 0)
+
+      return response.json({ pendingBookings: bookings.length })
+    } catch (error) {
+      console.error('Error in getPendingBookings:', error)
+      return response.status(500).json({ message: 'Internal Server Error', error })
     }
   }
   async getMyBooking({ auth, response }: HttpContext) {
@@ -34,7 +82,15 @@ export default class BookingsController {
     try {
       const { restaurantId } = params
       const bookings = await Booking.query().where('restaurant_id', restaurantId)
-      return response.status(200).json(bookings)
+      const enrichedBookings = await Promise.all(bookings.map(async (booking) => {
+        const user = await User.findBy('id', booking.user_id) // Trouvez le restaurant par son ID
+        return {
+          ...booking.toJSON(), // Convertissez booking en JSON
+          user_name: user ? user.lastName : 'Unknown' // Ajoutez le nom du restaurant ou 'Unknown' s'il n'est pas trouvé
+        }
+      }))
+
+      return response.status(200).json(enrichedBookings)
     } catch (error) {
       return response.status(500).json(error)
     }
@@ -48,9 +104,16 @@ export default class BookingsController {
       console.log('Fetching bookings for user ID:', userId); // Log pour vérification
 
       const bookings = await Booking.query().where('user_id', userId)
-      console.log('Bookings:', bookings); // Log les réservations pour vérification
 
-      return response.status(200).json(bookings)
+      const enrichedBookings = await Promise.all(bookings.map(async (booking) => {
+        const resto = await Restaurant.findBy('id', booking.restaurant_id) // Trouvez le restaurant par son ID
+        return {
+          ...booking.toJSON(), // Convertissez booking en JSON
+          restaurant_name: resto ? resto.name : 'Unknown' // Ajoutez le nom du restaurant ou 'Unknown' s'il n'est pas trouvé
+        }
+      }))
+
+      return response.status(200).json(enrichedBookings)
     } catch (error) {
       console.error('Error fetching bookings:', error)
       return response.status(500).json({ message: 'Failed to fetch bookings', error })
@@ -68,6 +131,12 @@ export default class BookingsController {
         .where('id', id)
         .andWhere('restaurant_id', restaurant.id)
         .first()
+
+      const user = await User.findBy('id', booking?.user_id)
+      if (user) {
+        user.fidelity = user.fidelity + 20
+        user.save()
+      }
 
       if (!booking) {
         console.log(`Booking with ID ${id} and Restaurant ID ${restaurant.id} not found`)

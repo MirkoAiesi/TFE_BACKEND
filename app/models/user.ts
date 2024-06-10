@@ -2,8 +2,10 @@ import { DateTime } from 'luxon'
 import { withAuthFinder } from '@adonisjs/auth'
 import hash from '@adonisjs/core/services/hash'
 import { compose } from '@adonisjs/core/helpers'
-import { BaseModel, column } from '@adonisjs/lucid/orm'
+import { BaseModel, column, hasOne } from '@adonisjs/lucid/orm'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
+import type { HasOne } from '@adonisjs/lucid/types/relations'
+import Restaurant from './restaurant.js'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
@@ -30,6 +32,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare roles: number
 
   @column()
+  declare fidelity: number
+
+  @column()
   declare birthday: Date
 
   @column.dateTime({ autoCreate: true })
@@ -45,4 +50,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
     type: 'auth_token',
     tokenSecretLength: 40,
   })
+
+  @hasOne(() => Restaurant, {
+    foreignKey: 'owner_id',
+  })
+  public restaurant!: HasOne<typeof Restaurant>
 }
