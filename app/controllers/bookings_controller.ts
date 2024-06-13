@@ -83,10 +83,10 @@ export default class BookingsController {
       const { restaurantId } = params
       const bookings = await Booking.query().where('restaurant_id', restaurantId)
       const enrichedBookings = await Promise.all(bookings.map(async (booking) => {
-        const user = await User.findBy('id', booking.user_id) // Trouvez le restaurant par son ID
+        const user = await User.findBy('id', booking.user_id)
         return {
-          ...booking.toJSON(), // Convertissez booking en JSON
-          user_name: user ? user.lastName : 'Unknown' // Ajoutez le nom du restaurant ou 'Unknown' s'il n'est pas trouvé
+          ...booking.toJSON(),
+          user_name: user ? user.lastName : 'Unknown'
         }
       }))
 
@@ -101,15 +101,15 @@ export default class BookingsController {
       if (isNaN(parseInt(userId))) {
         return response.status(400).json({ message: 'Invalid user ID' })
       }
-      console.log('Fetching bookings for user ID:', userId); // Log pour vérification
+      console.log('Fetching bookings for user ID:', userId);
 
       const bookings = await Booking.query().where('user_id', userId)
 
       const enrichedBookings = await Promise.all(bookings.map(async (booking) => {
-        const resto = await Restaurant.findBy('id', booking.restaurant_id) // Trouvez le restaurant par son ID
+        const resto = await Restaurant.findBy('id', booking.restaurant_id)
         return {
-          ...booking.toJSON(), // Convertissez booking en JSON
-          restaurant_name: resto ? resto.name : 'Unknown' // Ajoutez le nom du restaurant ou 'Unknown' s'il n'est pas trouvé
+          ...booking.toJSON(),
+          restaurant_name: resto ? resto.name : 'Unknown'
         }
       }))
 
@@ -175,6 +175,33 @@ export default class BookingsController {
     } catch (error) {
       console.error(error);
       return response.status(500).json(error);
+    }
+  }
+  async deleteBooking({ auth, params, response }: HttpContext) {
+    try {
+      const user = await auth.use('api').authenticate();
+      const bookingId = params.id;
+
+      const booking = await Booking.find(bookingId);
+      if (!booking) {
+        return response.status(500).json('Booking not found');
+
+      }
+
+      const restaurant = await Restaurant.find(booking.restaurant_id);
+      if (!restaurant) {
+        return response.status(500).json('Restaurant not found');
+      }
+
+      if (restaurant.owner_id !== user.id) {
+        return response.status(500).json('You do not have permission to delete this booking');
+      }
+
+      await booking.delete();
+      return response.status(200).json('Booking successfully deleted');
+    } catch (error) {
+      console.error(error);
+      return response.status(500).json('An error occurred while deleting the booking');
     }
   }
 

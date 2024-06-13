@@ -54,6 +54,7 @@ router
         router.patch('/update-status', [BookingsController, 'updateBookingStatus']).use(middleware.auth())
         router.patch('/user/update-status', [BookingsController, 'updateBookingStatusByUser']).use(middleware.auth())
         router.get('/pendings/status', [BookingsController, 'getPendingBookings']).use(middleware.auth())
+        router.delete('/:id', [BookingsController, 'deleteBooking']).use(middleware.auth())
       })
       .prefix('/bookings')
     router

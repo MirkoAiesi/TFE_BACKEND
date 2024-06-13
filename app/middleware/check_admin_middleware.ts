@@ -5,6 +5,7 @@ import { error } from 'node:console'
 export default class CheckAdminMiddleware {
   async handle(ctx: HttpContext, next: NextFn) {
     const user = await ctx.auth.authenticate()
+    console.log(user)
     if (user.roles === 10) {
       await next()
     } else {

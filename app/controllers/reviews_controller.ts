@@ -35,8 +35,8 @@ export default class ReviewsController {
       const user = await auth.use('api').authenticate()
 
       let reviews
-      if (user.id === 1) { // Vérifiez si l'utilisateur est l'administrateur
-        reviews = await Review.all() // L'administrateur voit tous les commentaires
+      if (user.id === 1) {
+        reviews = await Review.all()
       }
 
       response.status(200).json(reviews)
@@ -72,10 +72,10 @@ export default class ReviewsController {
       const reviews = await Review.query().where('user_id', userId)
 
       const enrichedReviews = await Promise.all(reviews.map(async (review) => {
-        const resto = await Restaurant.findBy('id', review.restaurant_id) // Trouvez le restaurant par son ID
+        const resto = await Restaurant.findBy('id', review.restaurant_id)
         return {
-          ...review.toJSON(), // Convertissez booking en JSON
-          restaurant_name: resto ? resto.name : 'Unknown' // Ajoutez le nom du restaurant ou 'Unknown' s'il n'est pas trouvé
+          ...review.toJSON(),
+          restaurant_name: resto ? resto.name : 'Unknown'
         }
       }))
 
@@ -91,7 +91,6 @@ export default class ReviewsController {
       const user = await auth.use('api').authenticate();
       const reviewId = params.id;
 
-      // Trouver l'avis par ID et vérifier que l'utilisateur est le propriétaire
       const review = await Review.findOrFail(reviewId);
 
       if (review.user_id !== user.id) {

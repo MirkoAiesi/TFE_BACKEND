@@ -50,9 +50,11 @@ export default class AdminController {
   }
   async deleteRestaurant({ params, response }: HttpContext) {
     try {
+      console.log('test');
       await Restaurant.query().where('id', params.id).delete()
       response.status(200).json('Restaurant has been deleted.')
     } catch (error) {
+      console.log('error')
       response.status(500).json(error)
     }
   }

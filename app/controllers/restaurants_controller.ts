@@ -17,14 +17,11 @@ export default class RestaurantsController {
     const { name, type, price, dogs, terrace, card } = request.only(['name', 'type', 'price', 'dogs', 'terrace', 'card'])
 
     let query = Restaurant.query()
-    // Filtrer d'abord par nom
     if (name) {
       query = query.whereRaw('LOWER(name) LIKE ?', [`%${name.toLowerCase()}%`])
     }
 
     const restaurants = await query.exec()
-
-    // Appliquer les autres filtres aux résultats
     let filteredRestaurants = restaurants
 
     if (type) {
@@ -174,7 +171,6 @@ export default class RestaurantsController {
     const uploadPath = path.join('public', restaurantId)
     console.log(uploadPath)
 
-    // Ensure the directory exists
     if (!fs.existsSync(uploadPath)) {
       fs.mkdirSync(uploadPath, { recursive: true })
     }
@@ -193,7 +189,6 @@ export default class RestaurantsController {
     const restaurantId = params.id
     const uploadPath = path.join('public', restaurantId)
 
-    // Ensure the directory exists
     if (!fs.existsSync(uploadPath)) {
       return response.json([])
     }
