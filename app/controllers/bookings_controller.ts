@@ -40,7 +40,6 @@ export default class BookingsController {
 
       return response.status(201).json('Booking successfully created.')
     } catch (error) {
-      console.log(error)
       response.status(500).json(error)
     }
   }
@@ -72,7 +71,6 @@ export default class BookingsController {
     try {
       const user = await auth.use('api').authenticate()
       const bookings = await Booking.query().where('user_id', user.id)
-      console.log(bookings)
       return response.status(200).json(bookings)
     } catch (error) {
       return response.status(500).json(error)
@@ -101,7 +99,6 @@ export default class BookingsController {
       if (isNaN(parseInt(userId))) {
         return response.status(400).json({ message: 'Invalid user ID' })
       }
-      console.log('Fetching bookings for user ID:', userId);
 
       const bookings = await Booking.query().where('user_id', userId)
 
@@ -139,7 +136,6 @@ export default class BookingsController {
       }
 
       if (!booking) {
-        console.log(`Booking with ID ${id} and Restaurant ID ${restaurant.id} not found`)
         return response.status(404).json({ error: 'Booking not found' })
       }
 
@@ -164,7 +160,6 @@ export default class BookingsController {
         .first();
 
       if (!booking) {
-        console.log(`Booking with ID ${id} and User ID ${user.id} not found`);
         return response.status(404).json({ error: 'Booking not found' });
       }
 

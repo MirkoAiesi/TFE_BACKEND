@@ -17,7 +17,6 @@ export default class AuthController {
 
   async login({ request, response }: HttpContext) {
     const data = request.all()
-    console.log(data)
     const user = await User.findBy('email', data.email)
     if (!user) {
       response.abort('Utilisateur introuvable.')

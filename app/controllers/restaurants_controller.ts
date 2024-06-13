@@ -98,32 +98,27 @@ export default class RestaurantsController {
 
       response.status(200).json(data);
     } catch (error) {
-      console.log(error)
       response.status(500).json(error);
     }
   }
   async addRestaurant({ auth, request, response }: HttpContext) {
     try {
       const user = await auth.use('api').authenticate()
-      console.log(user)
       const restaurant = await addRestaurantValidator.validate(
         request.only(['name', 'address', 'options', 'status', 'phone', 'cooking_type', 'price', 'cultery', 'schedule', 'cut_time', 'vacancy', 'rating'])
       )
-      console.log(restaurant)
       await Restaurant.create({
         owner_id: user.id,
         ...restaurant,
       })
       response.status(201).json('Restaurant successfully created.')
     } catch (error) {
-      console.log(error)
       response.status(500).json(error)
     }
   }
   async modifyRestaurant({ auth, request, response }: HttpContext) {
     try {
       const user = await auth.use('api').authenticate()
-      console.log(request.all())
       const restaurant = await addRestaurantValidator.validate(
         request.only(['name', 'address', 'options', 'phone', 'cooking_type', 'price', 'cultery', 'schedule', 'cut_time', 'vacancy'])
       )
@@ -141,7 +136,6 @@ export default class RestaurantsController {
       })
       response.status(200).json('Restaurant successfully modified.')
     } catch (error) {
-      console.log(error)
       response.status(500).json(error)
     }
   }
@@ -169,7 +163,6 @@ export default class RestaurantsController {
     }
 
     const uploadPath = path.join('public', restaurantId)
-    console.log(uploadPath)
 
     if (!fs.existsSync(uploadPath)) {
       fs.mkdirSync(uploadPath, { recursive: true })
@@ -219,7 +212,6 @@ export default class RestaurantsController {
       const { id, status } = request.only(['id', 'status'])
       const restaurant = await Restaurant.find(id)
       if (!restaurant) {
-        console.log(`Restaurant with ID ${id} not found`)
         return response.status(404).json({ error: 'Restaurant not found' })
       }
       restaurant.status = status

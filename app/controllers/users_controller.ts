@@ -30,9 +30,7 @@ export default class UsersController {
     try {
       const user = await auth.use('api').authenticate()
       const newData = request.all()
-      console.log(newData)
       const goodPassword = await hash.verify(user.password, newData.currentPassword)
-      console.log(goodPassword)
       if (goodPassword) {
         const payload = await changePasswordValidator.validate(newData)
         await User.query()

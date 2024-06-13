@@ -33,12 +33,12 @@ export default class Booking extends BaseModel {
   declare createdAt: DateTime
 
   @belongsTo(() => Restaurant, {
-    foreignKey: 'restaurantId', // Utilise restaurantId comme clé étrangère
+    foreignKey: 'restaurantId',
   })
   public restaurant!: BelongsTo<typeof Restaurant>
 
   @belongsTo(() => User, {
-    foreignKey: 'userId', // Utilise userId comme clé étrangère
+    foreignKey: 'userId',
   })
   public user!: BelongsTo<typeof User>
 }

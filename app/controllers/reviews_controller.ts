@@ -9,7 +9,6 @@ export default class ReviewsController {
     try {
       const user = await auth.use('api').authenticate();
       const restaurantId = params.id;
-      console.log(restaurantId)
       const restaurant = {
         ...request.all(),
         restaurant_id: restaurantId
@@ -81,7 +80,6 @@ export default class ReviewsController {
 
       return response.status(200).json(enrichedReviews)
 
-      response.status(200).json(reviews)
     } catch (error) {
       response.status(500).json({ message: 'Une erreur est survenue.', error: error.message })
     }
